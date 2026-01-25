@@ -1,7 +1,7 @@
-mod format;
-mod serialize;
-mod deserialize;
-mod writer;
+pub mod format;
+pub mod serialize;
+pub mod deserialize;
+pub mod writer;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right

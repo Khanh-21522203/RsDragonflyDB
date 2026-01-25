@@ -5,6 +5,7 @@ members = [
     "shard",
     "persistence",
     "frontend",
+    "observability",
 ]
 
 [workspace.package]
@@ -13,7 +14,6 @@ edition = "2021"
 rust-version = "1.75"
 
 [workspace.dependencies]
-crossbeam = "0.8"
 tokio = { version = "1.35", features = ["full"] }
 log = "0.4"
 env_logger = "0.11"
@@ -22,3 +22,26 @@ libc = "0.2"
 common = { path = "./common" }
 protocol = { path = "./protocol" }
 shard = { path = "./shard" }
+
+[package]
+name = "RsDragonflyDB"
+version.workspace = true      # Kế thừa từ trên
+edition.workspace = true      # Kế thừa từ trên
+rust-version.workspace = true # Kế thừa từ trên
+
+[[bin]]
+name = "RsDragonflyDB"
+path = "src/main.rs"
+
+[dependencies]
+log.workspace = true
+env_logger.workspace = true
+common = { path = "./common" }
+protocol = { path = "./protocol" }
+shard = { path = "./shard" }
+persistence = { path = "./persistence" }
+frontend = { path = "./frontend" }
+observability = { path = "./observability" }
+clap = { version = "4.5.54", features = ["derive"] }
+signal-hook = "0.4.3"
+tokio = "1.49.0"

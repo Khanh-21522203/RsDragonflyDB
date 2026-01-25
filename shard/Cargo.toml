@@ -7,3 +7,4 @@ edition.workspace = true
 common = { workspace = true }
 protocol = { workspace = true }
 log = { workspace = true }
+tokio = { workspace = true }

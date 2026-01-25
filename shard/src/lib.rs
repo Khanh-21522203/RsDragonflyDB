@@ -2,6 +2,7 @@ pub mod entry;
 pub mod shard;
 pub mod expiry;
 pub mod expiration;
+pub mod worker;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right

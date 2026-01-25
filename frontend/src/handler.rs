@@ -13,6 +13,7 @@ use protocol::serializer::serialize_resp2;
 use crate::router::Router;
 
 const SHARD_TIMEOUT: Duration = Duration::from_millis(500);
+const SEND_TIMEOUT: Duration = Duration::from_millis(100);
 
 pub struct ConnectionHandler {
     shard_channels: Vec<CommandSender>,
@@ -23,17 +24,15 @@ impl ConnectionHandler {
         ConnectionHandler { shard_channels }
     }
 
-    pub async fn run(&self, listener: TcpListener) {
+    pub async fn run(&self, listener: TcpListener) -> std::io::Result<()> {
         log::info!("Connection handler running...");
 
         loop {
-            // Chấp nhận kết nối mới (Async)
             match listener.accept().await {
                 Ok((socket, addr)) => {
                     log::debug!("New connection: {}", addr);
                     let channels = self.shard_channels.clone();
 
-                    // Spawn một task riêng cho mỗi kết nối (Green Thread)
                     tokio::spawn(async move {
                         if let Err(e) = handle_connection(socket, channels).await {
                             log::error!("Connection error: {}", e);
@@ -46,9 +45,8 @@ impl ConnectionHandler {
     }
 }
 
-async fn handle_connection(mut socket: TcpStream, shard_channels: Vec<CommandSender>) -> std::io::Result<()> {
+async fn handle_connection(socket: TcpStream, shard_channels: Vec<CommandSender>) -> std::io::Result<()> {
     let (mut reader, writer) = socket.into_split();
-
     // Wrap writer by BufWriter to reduce number of syscall
     let mut writer = BufWriter::new(writer);
 
@@ -129,16 +127,17 @@ async fn send_to_shard(shard_id: ShardId, command: Command, shards: &[CommandSen
     let msg = CommandMessage { command, reply_tx };
 
     if let Some(sender) = shards.get(shard_id.as_usize()) {
-        let send_result = timeout(Duration::from_millis(100), sender.send(msg)).await;
 
-        if send_result.is_err() || send_result.unwrap().is_err() {
-            return Response::Error("ERR shard overloaded".to_string());
-        }
-
-        match timeout(SHARD_TIMEOUT, reply_rx).await {
-            Ok(Ok(response)) => response,
-            Ok(Err(_)) => Response::Error("ERR shard closed connection".to_string()),
-            Err(_) => Response::Error("ERR shard timeout".to_string()), // Hết giờ
+        match timeout(SEND_TIMEOUT, sender.send(msg)).await {
+            Ok(Ok(())) => {
+                match timeout(SHARD_TIMEOUT, reply_rx).await {
+                    Ok(Ok(response)) => response,
+                    Ok(Err(_)) => Response::Error("ERR shard disconnected".to_string()),
+                    Err(_) => Response::Error("ERR shard timeout".to_string()),
+                }
+            }
+            Ok(Err(_)) => Response::Error("ERR shard channel closed".to_string()),
+            Err(_) => Response::Error("ERR shard overloaded".to_string()),
         }
     } else {
         Response::Error("ERR invalid shard id".to_string())
@@ -157,14 +156,16 @@ async fn process_multi_key_del(keys: Vec<Key>, shards: &[CommandSender]) -> Resp
             let (reply_tx, reply_rx) = oneshot::channel();
             let msg = CommandMessage { command: cmd, reply_tx };
 
-            // Logic gửi tương tự send_to_shard, thêm timeout ngắn gọn
-            if timeout(Duration::from_millis(100), sender.send(msg)).await.is_err() {
-                return Response::Error("ERR shard overloaded".to_string());
+            match timeout(SEND_TIMEOUT, sender.send(msg)).await {
+                Ok(Ok(())) => {},
+                Ok(Err(_)) => return Response::Error("ERR shard closed".to_string()),
+                Err(_) => return Response::Error("ERR shard overloaded".to_string()),
             }
 
             match timeout(SHARD_TIMEOUT, reply_rx).await {
                 Ok(Ok(res)) => res,
-                _ => Response::Error("ERR timeout".to_string()),
+                Ok(Err(_)) => Response::Error("ERR disconnected".to_string()),
+                Err(_) => Response::Error("ERR timeout".to_string()),
             }
         });
     }
@@ -187,6 +188,13 @@ async fn process_multi_key_del(keys: Vec<Key>, shards: &[CommandSender]) -> Resp
     } else {
         Response::Error(format!("ERR partial failure: {}", errors.join(", ")))
     }
+    // TODO: using MultiKeyExecutor
+    //Command::Del { keys } => {
+    //     // Executor nên được inject vào Handler hoặc tạo mới (nó nhẹ hều vì chỉ chứa Vec<Sender>)
+    //     let executor = MultiKeyExecutor::new(shards.to_vec());
+    //
+    //     // Gọi execute -> ra Result -> convert sang Response
+    //     executor.execute_del(keys).await.to_response()
 }
 
 fn response_to_resp(response: Response) -> RespValue {

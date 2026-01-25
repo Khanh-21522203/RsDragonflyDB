@@ -1,9 +1,15 @@
-use std::collections::HashMap;
-use crossbeam::channel::{self, Sender, Receiver};
+use std::time::Duration;
+use tokio::sync::oneshot;
+use tokio::time::timeout;
 use common::channels::{response_channel, CommandMessage, CommandSender, Response};
 use common::types::Key;
 use common::command::Command;
+use crate::error_handling::MultiKeyResult;
 use crate::router::Router;
+
+
+const SHARD_TIMEOUT: Duration = Duration::from_millis(500);
+const SEND_TIMEOUT: Duration = Duration::from_millis(100);
 
 pub struct MultiKeyExecutor {
     shard_channels: Vec<CommandSender>,
@@ -14,66 +20,65 @@ impl MultiKeyExecutor {
         MultiKeyExecutor { shard_channels }
     }
 
-    pub fn execute_del(&self, keys: Vec<Key>) -> Response {
-        // Group keys by shard
+    pub async fn execute_del(&self, keys: Vec<Key>) -> MultiKeyResult {
         let grouped = Router::route_keys(&keys);
-        let shard_count = grouped.len();
 
-        if shard_count == 0 {
-            return Response::Integer(0);
+        if grouped.is_empty() {
+            return MultiKeyResult::Success(0);
         }
 
-        // Create aggregation channel
-        let (agg_tx, agg_rx) = channel::bounded(shard_count);
+        let mut futures = Vec::new();
 
         // Send to all shards in parallel
         for (shard_id, shard_keys) in grouped {
-            let (reply_tx, reply_rx) = response_channel();
+            let cmd = Command::Del { keys: shard_keys };
+            let sender = self.shard_channels[shard_id.as_usize()].clone();
 
-            let msg = CommandMessage {
-                command: Command::Del { keys: shard_keys },
-                reply_tx,
-            };
+            futures.push(async move {
+                let (reply_tx, reply_rx) = oneshot::channel();
+                let msg = CommandMessage { command: cmd, reply_tx };
 
-            if let Err(e) = self.shard_channels[shard_id.as_usize()].send(msg) {
-                log::error!("Failed to send to shard {}: {}", shard_id.0, e);
-                let _ = agg_tx.send(Response::Error(format!("ERR shard {} unavailable", shard_id.0)));
-                continue;
-            }
+                if let Err(_) = timeout(SEND_TIMEOUT, sender.send(msg)).await {
+                    return (shard_id, Err("Shard overloaded (Send timeout)".to_string()));
+                }
 
-            // Forward response to aggregator
-            let agg_tx_clone = agg_tx.clone();
-            std::thread::spawn(move || {
-                match reply_rx.blocking_recv() {
-                    Ok(response) => {
-                        let _ = agg_tx_clone.send(response);
-                    }
-                    Err(_) => {
-                        let _ = agg_tx_clone.send(Response::Error("ERR timeout".to_string()));
-                    }
+                match timeout(SHARD_TIMEOUT, reply_rx).await {
+                    Ok(Ok(Response::Integer(n))) => (shard_id, Ok(n)),
+                    Ok(Ok(Response::Error(e))) => (shard_id, Err(e)),
+                    Ok(Err(_)) => (shard_id, Err("Shard disconnected".to_string())),
+                    Err(_) => (shard_id, Err("Shard response timeout".to_string())),
+                    _ => (shard_id, Err("Unexpected response type".to_string())),
                 }
             });
         }
 
-        drop(agg_tx);
+        let results = futures::future::join_all(futures).await;
 
         // Aggregate responses
         let mut total_deleted = 0;
+        let mut failed_shards = Vec::new();
         let mut errors = Vec::new();
 
-        for response in agg_rx {
-            match response {
-                Response::Integer(n) => total_deleted += n,
-                Response::Error(e) => errors.push(e),
-                _ => {}
+        for (shard_id, res) in results {
+            match res {
+                Ok(n) => total_deleted += n,
+                Err(e) => {
+                    failed_shards.push(shard_id);
+                    errors.push(format!("Shard {}: {}", shard_id.0, e));
+                }
             }
         }
 
         if errors.is_empty() {
-            Response::Integer(total_deleted)
+            MultiKeyResult::Success(total_deleted)
+        } else if total_deleted > 0 {
+            MultiKeyResult::PartialFailure {
+                succeeded: total_deleted,
+                failed_shards,
+                errors,
+            }
         } else {
-            Response::Error(format!("ERR partial failure: deleted {} keys, errors: {}",
-                                    total_deleted, errors.join(", ")))
+            MultiKeyResult::TotalFailure(errors.join("; "))
         }
     }
 }

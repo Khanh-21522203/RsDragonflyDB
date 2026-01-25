@@ -1,35 +1,20 @@
-use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
-use log::{info, error};
-use crate::pool::HandlerPool;
+use log::{info};
+use tokio::net::TcpListener;
+use crate::handler::ConnectionHandler;
 
-pub fn acceptor_thread(
+
+pub async fn acceptor_thread(
     bind_addr: String,
     port: u16,
-    handler_pool: Arc<HandlerPool>,
-) {
+    handler: Arc<ConnectionHandler>,
+) -> std::io::Result<()>{
     let addr = format!("{}:{}", bind_addr, port);
-    let listener = TcpListener::bind(&addr)
-        .expect(&format!("Failed to bind to {}", addr));
+    let listener = TcpListener::bind(&addr).await?;
 
     info!("Listening on {}", addr);
 
-    loop {
-        match listener.accept() {
-            Ok((socket, addr)) => {
-                log::debug!("Accepted connection from {}", addr);
+    handler.run(listener).await;
 
-                // Configure socket
-                if let Err(e) = socket.set_nodelay(true) {
-                    log::warn!("Failed to set TCP_NODELAY: {}", e);
-                }
-
-                // Assign to handler
-                handler_pool.add_connection(socket, addr);
-            }
-            Err(e) => {
-                error!("Accept failed: {}", e);
-            }
-        }
-    }
+    Ok(())
 }

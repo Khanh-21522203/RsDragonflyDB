@@ -1,8 +1,7 @@
-pub mod router;
-pub mod acceptor;
-pub mod handler;
-pub mod multi_key;
-pub mod error_handling;
+pub mod metrics;
+pub mod prometheus;
+pub mod logging;
+pub mod health;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
