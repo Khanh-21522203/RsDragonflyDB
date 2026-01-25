@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="EMPTY_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/common/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/frontend/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/persistence/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/protocal/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/protocol/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/shard/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/common/target" />
+      <excludeFolder url="file://$MODULE_DIR$/persistence/target" />
+      <excludeFolder url="file://$MODULE_DIR$/protocal/target" />
+      <excludeFolder url="file://$MODULE_DIR$/protocol/target" />
+      <excludeFolder url="file://$MODULE_DIR$/shard/target" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

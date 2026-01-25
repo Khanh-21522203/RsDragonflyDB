@@ -1,0 +1,9 @@
+[package]
+name = "shard"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+common = { workspace = true }
+protocol = { workspace = true }
+log = { workspace = true }

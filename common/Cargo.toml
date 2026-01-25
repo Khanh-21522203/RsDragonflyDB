@@ -1,0 +1,9 @@
+[package]
+name = "common"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+crossbeam = { workspace = true }
+tokio = { workspace = true }
+libc = { workspace = true }

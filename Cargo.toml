@@ -1,0 +1,24 @@
+[workspace]
+members = [
+    "common",
+    "protocol",
+    "shard",
+    "persistence",
+    "frontend",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+
+[workspace.dependencies]
+crossbeam = "0.8"
+tokio = { version = "1.35", features = ["full"] }
+log = "0.4"
+env_logger = "0.11"
+crc = "3.0"
+libc = "0.2"
+common = { path = "./common" }
+protocol = { path = "./protocol" }
+shard = { path = "./shard" }
