@@ -1,11 +1,11 @@
 use std::collections::{HashMap, BinaryHeap};
 use std::time::{Duration, Instant};
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
-use common::channels::Response;
 use common::constants::{MAX_KEYS_PER_SHARD, MAX_KEY_SIZE, MAX_MEMORY_PER_SHARD, MAX_VALUE_SIZE};
 use common::shard_id::ShardId;
 use common::types::{Key, Value};
-use common::command::Command;
+use protocol::command::Command;
+use protocol::response::Response;
 use crate::entry::Entry;
 use crate::expiry::Expiry;
 

@@ -14,7 +14,7 @@ pub async fn acceptor_thread(
 
     info!("Listening on {}", addr);
 
-    handler.run(listener).await;
+    let _ = handler.run(listener).await;
 
     Ok(())
 }

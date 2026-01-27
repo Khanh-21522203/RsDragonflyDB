@@ -1,16 +1,17 @@
-use std::io;
-use std::io::{Cursor, Read};
+use std::io::{self, Cursor, Read};
 use std::sync::atomic::Ordering;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use byteorder::{LittleEndian, ReadBytesExt};
+use crc::{Crc, CRC_64_ECMA_182};
 use common::shard_id::ShardId;
 use common::time::unix_timestamp_to_instant;
 use common::types::Value;
-use shard::entry::Entry;
-use shard::expiry::Expiry;
-use shard::shard::Shard;
-use crate::format::{SnapshotHeader, HEADER_SIZE, MAGIC, VERSION};
-use crate::serialize::CRC64;
+use crate::shard::Shard;
+use crate::entry::Entry;
+use crate::expiry::Expiry;
+use crate::persistence::format::{SnapshotHeader, HEADER_SIZE, MAGIC, VERSION};
+
+const CRC64: Crc<u64> = Crc::<u64>::new(&CRC_64_ECMA_182);
 
 pub fn deserialize_snapshot(data: &[u8]) -> Result<Shard, SnapshotError> {
     if data.len() < HEADER_SIZE {

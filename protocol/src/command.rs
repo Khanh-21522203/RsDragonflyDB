@@ -1,5 +1,5 @@
+use common::types::{Key, Value};
 use crate::resp::RespValue;
-use crate::types::{Key, Value};
 
 pub enum Command {
     Ping { message: Option<Vec<u8>> },

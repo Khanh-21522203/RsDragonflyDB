@@ -1,6 +1,7 @@
 use std::thread::{self, JoinHandle};
 use crate::shard_id::ShardId;
 
+// TODO: remove
 pub enum ThreadType {
     Acceptor,
     ConnectionHandler(usize),

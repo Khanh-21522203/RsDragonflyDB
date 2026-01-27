@@ -1,5 +1,5 @@
-use common::channels::Response;
 use common::shard_id::ShardId;
+use protocol::response::Response;
 
 pub enum MultiKeyResult {
     Success(i64),

@@ -5,9 +5,7 @@ use std::path::PathBuf;
 use std::time::Instant;
 use common::channels::SnapshotReceiver;
 use common::shard_id::ShardId;
-use shard::shard::Shard;
 use tokio::task;
-use crate::deserialize::{deserialize_snapshot, SnapshotError};
 
 pub async  fn run_snapshot_writer(
     shard_id: ShardId,
@@ -59,18 +57,6 @@ fn write_snapshot_file(path: &PathBuf, data: &[u8]) -> io::Result<()> {
     file.write_all(data)?;
     file.sync_all()?;  // fsync
     Ok(())
-}
-
-pub fn load_snapshot(snapshot_dir: &PathBuf, shard_id: ShardId) -> Result<Shard, SnapshotError> {
-    let snapshot_path = snapshot_dir.join(format!("shard{}.snap", shard_id.0));
-
-    if !snapshot_path.exists() {
-        log::info!("No snapshot found for shard {}, starting empty", shard_id.0);
-        return Ok(Shard::new(shard_id));
-    }
-
-    let data = fs::read(&snapshot_path)?;
-    deserialize_snapshot(&data)
 }
 
 pub fn cleanup_temp_files(snapshot_dir: &PathBuf) {

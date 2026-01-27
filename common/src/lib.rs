@@ -4,10 +4,7 @@ pub mod constants;
 pub mod hash;
 pub mod threads;
 pub mod channels;
-pub mod cpu_pinning;
 pub mod time;
-pub mod resp;
-pub mod command;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right

@@ -1,9 +1,10 @@
 use std::time::Duration;
 use tokio::sync::oneshot;
 use tokio::time::timeout;
-use common::channels::{response_channel, CommandMessage, CommandSender, Response};
 use common::types::Key;
-use common::command::Command;
+use protocol::channels::{CommandMessage, CommandSender};
+use protocol::command::Command;
+use protocol::response::Response;
 use crate::error_handling::MultiKeyResult;
 use crate::router::Router;
 

@@ -1,9 +1,11 @@
 use std::time::Duration;
 use tokio::time::{interval, MissedTickBehavior};
-use common::channels::{CommandReceiver, SnapshotRequest, SnapshotSender};
+use common::channels::{SnapshotRequest, SnapshotSender};
 use common::constants::{SNAPSHOT_INTERVAL_SECS, TTL_CHECK_INTERVAL_MS};
 use common::shard_id::ShardId;
+use protocol::channels::CommandReceiver;
 use crate::shard::Shard;
+use crate::snapshot::serialize::serialize_shard;
 
 pub async fn run_shard_worker(
     shard_id: ShardId,
@@ -68,10 +70,4 @@ async fn trigger_snapshot(shard: &mut Shard, snapshot_tx: &SnapshotSender) {
             log::error!("Snapshot writer disconnected for shard {}", shard.id.0);
         }
     }
-}
-
-fn serialize_shard(shard: &Shard) -> Vec<u8> {
-    // TODO: Implement serialize logic
-    // Ví dụ: bincode::serialize(&shard.data).unwrap()
-    Vec::new()
 }

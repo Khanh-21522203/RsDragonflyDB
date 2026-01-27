@@ -1,11 +1,11 @@
-use std::io::Cursor;
+use std::io::{Cursor};
 use byteorder::{LittleEndian, WriteBytesExt};
 use crc::{Crc, CRC_64_ECMA_182};
 use common::time::instant_to_unix_timestamp;
-use shard::shard::Shard;
-use crate::format::{SnapshotHeader, HEADER_SIZE};
+use crate::persistence::format::{SnapshotHeader, HEADER_SIZE};
+use crate::shard::Shard;
 
-pub const CRC64: Crc<u64> = Crc::<u64>::new(&CRC_64_ECMA_182);
+const CRC64: Crc<u64> = Crc::<u64>::new(&CRC_64_ECMA_182);
 
 pub fn serialize_shard(shard: &Shard) -> Vec<u8> {
     let estimated_size = estimate_snapshot_size(shard);

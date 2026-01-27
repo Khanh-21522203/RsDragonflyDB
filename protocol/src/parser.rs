@@ -1,5 +1,5 @@
 use std::io;
-use common::resp::RespValue;
+use crate::resp::RespValue;
 use std::io::{BufRead, Cursor, Read};
 use common::constants::MAX_VALUE_SIZE;
 

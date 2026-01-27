@@ -1,4 +1,4 @@
-use common::resp::RespValue;
+use crate::resp::RespValue;
 
 pub fn serialize_resp2(value: &RespValue) -> Vec<u8> {
     let mut buf = Vec::new();
