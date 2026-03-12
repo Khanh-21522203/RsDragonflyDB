@@ -6,14 +6,13 @@ version = 4
 name = "RsDragonflyDB"
 version = "0.1.0"
 dependencies = [
+ "byteorder",
  "clap",
- "common",
+ "crc",
  "env_logger",
- "frontend",
+ "futures",
  "log",
- "observability",
- "protocol",
- "shard",
+ "serde_json",
  "tokio",
 ]
 
@@ -147,13 +146,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
-name = "common"
-version = "0.1.0"
-dependencies = [
- "tokio",
-]
-
-[[package]]
 name = "crc"
 version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -199,17 +191,6 @@ checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
  "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "frontend"
-version = "0.1.0"
-dependencies = [
- "common",
- "futures",
- "log",
- "protocol",
- "tokio",
 ]
 
 [[package]]
@@ -382,17 +363,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "observability"
-version = "0.1.0"
-dependencies = [
- "common",
- "log",
- "serde_json",
- "shard",
- "tokio",
-]
-
-[[package]]
 name = "once_cell_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -455,14 +425,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "protocol"
-version = "0.1.0"
-dependencies = [
- "common",
- "tokio",
 ]
 
 [[package]]
@@ -558,18 +520,6 @@ dependencies = [
  "serde",
  "serde_core",
  "zmij",
-]
-
-[[package]]
-name = "shard"
-version = "0.1.0"
-dependencies = [
- "byteorder",
- "common",
- "crc",
- "log",
- "protocol",
- "tokio",
 ]
 
 [[package]]

@@ -4,17 +4,36 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::signal;
 use tokio::time::sleep;
-use common::channels::{snapshot_channel};
-use common::constants::{DRAIN_TIMEOUT_SECS, SHARD_COUNT};
-use common::shard_id::ShardId;
-use frontend::handler::ConnectionHandler;
-use observability::metrics::GlobalMetrics;
-use observability::prometheus::{run_metrics_exporter};
-use protocol::channels::{command_channel, CommandSender};
-use shard::persistence::writer::{cleanup_temp_files, run_snapshot_writer};
-use shard::shard::ShardMetrics;
-use shard::worker::run_shard_worker;
-use crate::Args;
+use crate::common::channels::{snapshot_channel};
+use crate::common::constants::{DRAIN_TIMEOUT_SECS, SHARD_COUNT};
+use crate::common::shard_id::ShardId;
+use crate::frontend::handler::ConnectionHandler;
+use crate::observability::metrics::GlobalMetrics;
+use crate::observability::prometheus::{run_metrics_exporter};
+use crate::protocol::channels::{command_channel, CommandSender};
+use crate::shard::persistence::writer::{cleanup_temp_files, run_snapshot_writer};
+use crate::shard::shard::ShardMetrics;
+use crate::shard::worker::run_shard_worker;
+
+// CLI Arguments struct - defined here to avoid circular dependencies
+#[derive(clap::Parser)]
+#[command(name = "rs_dragonfly_db")]
+pub struct Args {
+    #[arg(long, default_value = "6379")]
+    pub port: u16,
+
+    #[arg(long, default_value = "0.0.0.0")]
+    pub bind: String,
+
+    #[arg(long, default_value = "./data")]
+    pub snapshot_dir: String,
+
+    #[arg(long, default_value = "info")]
+    pub log_level: String,
+
+    #[arg(long, default_value = "false")]
+    pub cpu_pinning: bool,
+}
 
 pub struct Server {
     config: Config,

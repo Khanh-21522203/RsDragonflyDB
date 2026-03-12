@@ -1,43 +1,19 @@
-[workspace]
-members = [
-    "common",
-    "protocol",
-    "shard",
-    "frontend",
-    "observability",
-]
-
-[workspace.package]
+[package]
+name = "RsDragonflyDB"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.75"
-
-[workspace.dependencies]
-tokio = { version = "1.35", features = ["full"] }
-log = "0.4"
-env_logger = "0.11"
-crc = "3.0"
-common = { path = "./common" }
-protocol = { path = "./protocol" }
-shard = { path = "./shard" }
-
-[package]
-name = "RsDragonflyDB"
-version.workspace = true      # Kế thừa từ trên
-edition.workspace = true      # Kế thừa từ trên
-rust-version.workspace = true # Kế thừa từ trên
 
 [[bin]]
 name = "RsDragonflyDB"
 path = "src/main.rs"
 
 [dependencies]
-log.workspace = true
-env_logger.workspace = true
-common = { path = "./common" }
-protocol = { path = "./protocol" }
-shard = { path = "./shard" }
-frontend = { path = "./frontend" }
-observability = { path = "./observability" }
+tokio = { version = "1.35", features = ["full"] }
+log = "0.4"
+env_logger = "0.11"
+crc = "3.0"
+byteorder = "1.5.0"
+futures = "0.3.31"
 clap = { version = "4.5.54", features = ["derive"] }
-tokio = "1.49.0"
+serde_json = "1.0.149"

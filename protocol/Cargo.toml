@@ -1,8 +1,0 @@
-[package]
-name = "protocol"
-version.workspace = true
-edition.workspace = true
-
-[dependencies]
-common = { workspace = true }
-tokio = { workspace = true }
